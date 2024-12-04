@@ -126,7 +126,7 @@ such as annotation and feature paths. Now you are ready to use this script for t
 
 ## Results and Checkpoints
 
-### Results on QVHighlights
+### Results on QVHighlights test set
 
 | Model | MR |  |  | HD |  | Checkpoints |
 | ----- | :---: | :---: | :---: | :---: | :---: | :---: |
