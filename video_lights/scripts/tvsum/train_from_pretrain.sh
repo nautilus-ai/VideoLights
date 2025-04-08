@@ -112,3 +112,6 @@ do
   done
 done
 
+#
+#        --contrastive_align_loss \
+#        --contrastive_align_loss_coef ${contrastive_align_loss_coef} \

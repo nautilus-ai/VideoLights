@@ -1,10 +1,10 @@
 dset_name=hl
 ctx_mode=video_tef
 #v_feat_types=clip
-#v_feat_types=slowfast_clip
-v_feat_types=slowfast_clip_blip
-#t_feat_types=clip
-t_feat_types=clip_blip
+v_feat_types=slowfast_clip
+#v_feat_types=slowfast_clip_blip
+t_feat_types=clip
+#t_feat_types=clip_blip
 results_root=results/qvhighlights/Final
 exp_id=exp
 

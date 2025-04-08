@@ -1,7 +1,7 @@
 dset_name=charadesSTA
 ctx_mode=video_tef
-v_feat_types=slowfast_clip_blip
-t_feat_types=clip_blip
+v_feat_types=slowfast_clip
+t_feat_types=clip
 results_root=results/charadesSTA/Final
 exp_id=exp-bicmf_2-csl-cal_0.2-nfr-edl_3-conval-hl-tcl
 
