@@ -22,7 +22,7 @@ class BaseOptions(object):
         self.initialized = True
         parser = argparse.ArgumentParser()
         parser.add_argument("--dset_name", default="hl", type=str, choices=['hl', 'tvsum', 'charadesSTA',
-                                                                            'tacos', 'youtube_uni', 'activitynet'])
+                                                                            'tacos', 'youtube_uni', 'activitynet', 'nlq'])
         parser.add_argument("--dset_domain", type=str, default='BK',
                             help="Domain to train for tvsum/youtube-hl dataset.")
         

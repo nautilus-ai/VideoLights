@@ -1,17 +1,17 @@
-dset_name=activitynet
+dset_name=nlq
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_types=clip
-results_root=results/activitynet
+results_root=results/nlq
 exp_id=exp
 
 ######## data paths
-train_path=data/activitynet/train.jsonl
-eval_path=data/activitynet/val_1.jsonl
+train_path=data/nlq/nlq_train.jsonl
+eval_path=data/nlq/nlq_val.jsonl
 eval_split_name=val
 
 ######## setup video+text features
-feat_root=../Datasets/activitynet
+feat_root=../Datasets/NLQ
 
 # video features
 v_feat_dim=0
@@ -42,9 +42,9 @@ fi
 #fi
 
 #### training
-bsz=24
+bsz=32
 eval_bsz=32
-lr=5e-05
+lr=1e-05
 lr_drop=100
 dec_layers=3
 enc_layers=3

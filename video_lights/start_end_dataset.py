@@ -169,6 +169,12 @@ class StartEndDataset(Dataset):
                         "saliency_all_labels"], model_inputs["saliency_pos_index"] = \
                         self.get_saliency_labels_sub_as_query(meta["relevant_windows"][0], meta["duration"],
                                                               ctx_l)  # only one gt
+                elif self.dset_name in ['nlq']:
+                    model_inputs["saliency_pos_labels"], model_inputs["saliency_neg_labels"], model_inputs[
+                        "saliency_all_labels"], model_inputs[
+                        "saliency_pos_index"] = self.get_saliency_labels_sub_as_query(meta["relevant_windows"][0],
+                                                                                      meta["duration"], ctx_l,
+                                                                                      2)  # only one gt
                 elif "subs_train" not in self.data_path and "pre_train" not in self.data_path:
                     model_inputs["saliency_pos_labels"], model_inputs["saliency_neg_labels"], model_inputs[
                         "saliency_all_labels"], model_inputs["saliency_pos_index"] = \
