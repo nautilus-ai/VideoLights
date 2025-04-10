@@ -44,15 +44,15 @@ fi
 #### training
 bsz=32
 eval_bsz=32
-lr=1e-05
-lr_drop=100
+lr=2e-04
+lr_drop=200
 dec_layers=3
 enc_layers=3
 bicmf_layers=1
 max_v_l=-1
-contrastive_align_loss_coef=0.8
+clip_length=2
+contrastive_align_loss_coef=0.002
 hard_pos_neg_loss_coef=1
-giou_loss_coef=2
 main_metric="MR-full-R1@0.3"
 #pretrain_path=results/hl-video_tef-pt-2024_03_24_17_02_26/model_best.ckpt
 
@@ -71,10 +71,11 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --results_root ${results_root} \
 --exp_id exp-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl-scsl-cal_${contrastive_align_loss_coef}-${v_feat_types} \
 --max_v_l ${max_v_l} \
---clip_length 2 \
+--clip_length ${clip_length} \
 --lr ${lr} \
 --lr_drop ${lr_drop} \
 --n_epoch 100 \
+--lw_saliency 4 \
 --eval_bsz ${eval_bsz} \
 --dec_layers ${dec_layers} \
 --enc_layers ${enc_layers} \
@@ -84,6 +85,5 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --hard_pos_neg_loss_coef ${hard_pos_neg_loss_coef} \
 --contrastive_align_loss \
 --contrastive_align_loss_coef ${contrastive_align_loss_coef} \
---giou_loss_coef ${giou_loss_coef} \
 --main_metric ${main_metric} \
 ${@:1}
