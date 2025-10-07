@@ -1,30 +1,28 @@
-import os
-import time
 import json
+import logging
+import os
 import pprint
 import random
-import numpy as np
-from tqdm import tqdm, trange
+import time
 from collections import defaultdict
 
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm, trange
 
+from utils.basic_utils import AverageMeter, dict_to_markdown
+from utils.model_utils import count_parameters
 from video_lights.config import BaseOptions
-from video_lights.start_end_dataset import \
-    StartEndDataset, start_end_collate, prepare_batch_inputs
 # from qd_detr.start_end_dataset_audio import \
 #     StartEndDataset_audio, start_end_collate_audio, prepare_batch_inputs_audio
 from video_lights.inference import eval_epoch, start_inference, setup_model
-from utils.basic_utils import AverageMeter, dict_to_markdown
-from utils.model_utils import count_parameters
-from fvcore.nn import FlopCountAnalysis
+from video_lights.start_end_dataset import \
+    StartEndDataset, start_end_collate, prepare_batch_inputs
 
-
-import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
