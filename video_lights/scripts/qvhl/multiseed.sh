@@ -61,7 +61,7 @@ bicmf_layers=1
 contrastive_align_loss_coef=0.2
 seed=2018
 
-for seed in 2018 42 123 3407 2025
+for seed in 42 123 3407 #2025
 do
   PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
   --dset_name ${dset_name} \
