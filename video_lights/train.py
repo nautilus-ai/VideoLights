@@ -101,27 +101,19 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         d = {k: f"{getattr(meter, k):.4f}" for k in ["max", "min", "avg"]}
         logger.info(f"{name} ==> {d}")
 
-def calculate_stop_score(metrics: dict[str, float], opts):
+def calculate_stop_score(metrics: dict[str, float]):
     # Define the weights
-    if opts.dset_name in ['hl']:
-        weights = {
-            "MR-full-R1@0.3": 0.3,
-            "MR-full-R1@0.5": 0.5,
-            "MR-full-R1@0.7": 0.7,
-            "MR-full-mAP@0.5": 0.5,
-            "MR-full-mAP@0.75": 0.75,
-            "MR-full-mAP": 0.25,
-            "MR-long-mAP": 0.25,
-            "MR-middle-mAP": 0.25,
-            "MR-short-mAP": 0.25,
-        }
-    else:
-        weights = {
-            "MR-full-R1@0.3": 0.3,
-            "MR-full-R1@0.5": 0.5,
-            "MR-full-R1@0.7": 0.7,
-            "MR-full-mIoU": 0.50,
-        }
+    weights = {
+        "MR-full-R1@0.3": 0.3,
+        "MR-full-R1@0.5": 0.5,
+        "MR-full-R1@0.7": 0.7,
+        "MR-full-mAP@0.5": 0.5,
+        "MR-full-mAP@0.75": 0.75,
+        "MR-full-mAP": 0.25,
+        "MR-long-mAP": 0.25,
+        "MR-middle-mAP": 0.25,
+        "MR-short-mAP": 0.25,
+    }
 
     # Normalize weights
     total_weight = sum(weights.values())
@@ -200,7 +192,7 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
                 tb_writer.add_scalar(f"Eval/{k}", float(v), epoch_i+1)
 
             # stop_score = metrics["brief"][opt.main_metric]
-            stop_score = calculate_stop_score(metrics["brief"], opts=opt)
+            stop_score = calculate_stop_score(metrics["brief"])
 
             if stop_score > prev_best_score:
                 es_cnt = 0

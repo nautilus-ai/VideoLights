@@ -326,18 +326,13 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
     else:
         criterion = None
 
-    if opt.dset_name == 'tacos':
-        shuffle = True
-    else:
-        shuffle = False
-
     # if opt.a_feat_dir is None:
     eval_loader = DataLoader(
         eval_dataset,
         collate_fn=start_end_collate,
         batch_size=opt.eval_bsz,
         num_workers=opt.num_workers,
-        shuffle=shuffle,
+        shuffle=False,
         pin_memory=opt.pin_memory
     )
     # else:
@@ -366,7 +361,7 @@ def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None,
     else:
         submission, eval_loss_meters = get_eval_res(model, eval_loader, opt, epoch_i, criterion, tb_writer)
 
-        if opt.dset_name in ['charadesSTA', 'tacos', 'nlq', 'activitynet']:
+        if opt.dset_name in ['charadesSTA', 'tacos', 'nlq']:
             new_submission = []
             for s in submission:
                 s.pop('pred_saliency_scores', None)

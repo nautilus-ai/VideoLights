@@ -58,7 +58,7 @@ bsz=32
 dec_layers=3
 enc_layers=3
 bicmf_layers=1
-contrastive_align_loss_coef=0.2
+contrastive_align_loss_coef=0.01
 seed=2018
 
 for seed in 42 123 3407 #2025

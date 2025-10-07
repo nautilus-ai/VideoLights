@@ -22,7 +22,7 @@ class BaseOptions(object):
         self.initialized = True
         parser = argparse.ArgumentParser()
         parser.add_argument("--dset_name", default="hl", type=str, choices=['hl', 'tvsum', 'charadesSTA',
-                                                                            'tacos', 'youtube_uni', 'activitynet', 'nlq'])
+                                                                            'tacos', 'youtube_uni'])
         parser.add_argument("--dset_domain", type=str, default='BK',
                             help="Domain to train for tvsum/youtube-hl dataset.")
         
@@ -163,7 +163,6 @@ class BaseOptions(object):
         parser.add_argument("--contrastive_align_loss_coef", default=0.2, type=float)
         parser.add_argument("--hard_pos_neg_loss_coef", default=10.0, type=float)
         parser.add_argument("--cos_sim_loss_coef", default=1.0, type=float)
-        parser.add_argument("--mr_to_hd_loss_coef", default=1.0, type=float)
 
         parser.add_argument("--no_sort_results", action="store_true",
                             help="do not sort results, use this for moment query visualization")
