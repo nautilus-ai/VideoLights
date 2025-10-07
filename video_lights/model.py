@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from video_lights.feature_refinement import FeatureRefinement
-from video_lights.components import GlobalFeatureExtractor, ConvLinearLayer, MLP, LinearLayer
+from video_lights.components import GlobalFeatureExtractor, ConvLinearLayer, MLP
 from video_lights.span_utils import generalized_temporal_iou, span_cxw_to_xx
 
 from video_lights.matcher import build_matcher
@@ -28,7 +28,7 @@ class VideoLight(nn.Module):
     """ QD DETR. """
 
     def __init__(self, transformer, position_embed, txt_position_embed, txt_dim, vid_dim,
-                 num_queries, input_dropout, aux_loss=False, mr_to_hd_loss=False, fra=True,
+                 num_queries, input_dropout, aux_loss=False, mr_to_hd_loss=False,
                  contrastive_align_loss=False, contrastive_hdim=64,
                  max_v_l=75, span_loss_type="l1", use_txt_pos=False, n_input_proj=2, aud_dim=0, clip_len=2):
         """ Initializes the model.
@@ -70,51 +70,29 @@ class VideoLight(nn.Module):
         self.query_embed = nn.Embedding(num_queries, 2)
         relu_args = [True] * 3
         relu_args[n_input_proj - 1] = False
-        self.fra = fra
-        if self.fra :
-            self.input_txt_proj = nn.Sequential(*[
-                                                     ConvLinearLayer(txt_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[0]),
-                                                     ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[1]),
-                                                     ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[2])
-                                                 ][:n_input_proj])
-            self.input_vid_proj = nn.Sequential(*[
-                                                     ConvLinearLayer(vid_dim + aud_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[0]),
-                                                     ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[1]),
-                                                     ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[2])
-                                                 ][:n_input_proj])
-        else:
-            self.input_txt_proj = nn.Sequential(*[
-                                                     LinearLayer(txt_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[0]),
-                                                     LinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[1]),
-                                                     LinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[2])
-                                                 ][:n_input_proj])
-            self.input_vid_proj = nn.Sequential(*[
-                                                     LinearLayer(vid_dim + aud_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[0]),
-                                                     LinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[1]),
-                                                     LinearLayer(hidden_dim, hidden_dim, layer_norm=True,
-                                                                     dropout=input_dropout, relu=relu_args[2])
-                                                 ][:n_input_proj])
-
+        self.input_txt_proj = nn.Sequential(*[
+                                                 ConvLinearLayer(txt_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[0]),
+                                                 ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[1]),
+                                                 ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[2])
+                                             ][:n_input_proj])
+        self.input_vid_proj = nn.Sequential(*[
+                                                 ConvLinearLayer(vid_dim + aud_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[0]),
+                                                 ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[1]),
+                                                 ConvLinearLayer(hidden_dim, hidden_dim, layer_norm=True,
+                                                                 dropout=input_dropout, relu=relu_args[2])
+                                             ][:n_input_proj])
         self.contrastive_align_loss = contrastive_align_loss
         if contrastive_align_loss:
             self.contrastive_align_projection_query = nn.Linear(hidden_dim, contrastive_hdim)
             self.contrastive_align_projection_txt = nn.Linear(hidden_dim, contrastive_hdim)
             self.contrastive_align_projection_vid = nn.Linear(hidden_dim, contrastive_hdim)
 
-
-        if self.fra:
-            self.feature_refinement = FeatureRefinement(hidden_dim)
+        self.feature_refinement = FeatureRefinement(hidden_dim)
         self.saliency_proj1 = nn.Linear(hidden_dim, hidden_dim)
         self.saliency_proj2 = nn.Linear(hidden_dim, hidden_dim)
         self.aux_loss = aux_loss
@@ -157,8 +135,7 @@ class VideoLight(nn.Module):
 
         src_vid_ed = src_vid
 
-        if self.fra:
-            src_vid = self.feature_refinement(src_vid, src_txt, src_vid_mask, src_txt_mask)
+        src_vid = self.feature_refinement(src_vid, src_txt, src_vid_mask, src_txt_mask)
 
         src = torch.cat([src_vid, src_txt], dim=1)  # (bsz, L_vid+L_txt, d)
         mask = torch.cat([src_vid_mask, src_txt_mask], dim=1).bool()  # (bsz, L_vid+L_txt)
@@ -312,7 +289,7 @@ class SetCriterion(nn.Module):
 
     def __init__(self, matcher, weight_dict, eos_coef, losses, temperature, span_loss_type, max_v_l,
                  saliency_margin=1, use_matcher=True, n_epoch=200, hard_pos_neg_loss=False,
-                 hard_pos_neg_loss_coef=10.0, clip_len=2, mr_to_hd_loss=False, mr_to_hd_loss_coef=1.0, cos_sim_loss_coef=1.0):
+                 hard_pos_neg_loss_coef=10.0, clip_len=2, mr_to_hd_loss=False, cos_sim_loss_coef=1.0):
         """ Create the criterion.
         Parameters:
             matcher: module able to compute a matching between targets and proposals
@@ -349,7 +326,6 @@ class SetCriterion(nn.Module):
         self.cos_sim_loss_coef = cos_sim_loss_coef
         self.clip_len = clip_len
         self.mr_to_hd_loss = mr_to_hd_loss
-        self.mr_to_hd_loss_coef = mr_to_hd_loss_coef
 
     def loss_spans(self, outputs, targets, indices, epoch_i=0):
         """Compute the losses related to the bounding boxes, the L1 regression loss and the GIoU loss
@@ -508,7 +484,7 @@ class SetCriterion(nn.Module):
             sal_from_mr = ((sal_from_mr - sal_from_mr.min()) /
                            (gt_tensor.max() - gt_tensor.min()))
             sal_from_mr = F.normalize(sal_from_mr, dim=1, p=2)
-            sal_from_mr_cos_sim_loss = (1 - F.cosine_similarity(sal_from_mr, gt_norm)).sum() * self.mr_to_hd_loss_coef
+            sal_from_mr_cos_sim_loss = (1 - F.cosine_similarity(sal_from_mr, gt_norm)).sum()
 
         hard_loss = torch.zeros(1).to(saliency_scores.device)
         if self.hard_pos_neg_loss:
@@ -575,7 +551,7 @@ class SetCriterion(nn.Module):
 
         # Calculating cosine similarity loss
         cos_sim = F.cosine_similarity(gt_norm, sal_norm, dim=1)  # (bsz,)
-        cos_sim_err = (1 - cos_sim)  # (bsz,)
+        cos_sim_err = (1 - cos_sim) * self.cos_sim_loss_coef  # (bsz,)
 
         # Returning the summed loss
         return cos_sim_err.sum()
@@ -740,8 +716,7 @@ def build_model(args):
         saliency_margin=args.saliency_margin, use_matcher=use_matcher,
         n_epoch=args.n_epoch, hard_pos_neg_loss=args.hard_pos_neg_loss,
         hard_pos_neg_loss_coef=args.hard_pos_neg_loss_coef, clip_len=args.clip_length,
-        mr_to_hd_loss=args.mr_to_hd_loss, mr_to_hd_loss_coef=args.mr_to_hd_loss_coef,
-        cos_sim_loss_coef=args.cos_sim_loss_coef,
+        mr_to_hd_loss=args.mr_to_hd_loss, cos_sim_loss_coef=args.cos_sim_loss_coef,
     )
     criterion.to(device)
     return model, criterion
