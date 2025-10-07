@@ -56,7 +56,7 @@ hard_pos_neg_loss_coef=10
 main_metric="MR-full-R1@0.3"
 #pretrain_path=results/hl-video_tef-pt-2024_03_24_17_02_26/model_best.ckpt
 
-for seed in 2018 42 123 3407 2025
+for seed in 42 123 3407 2025
 do
   PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
   --dset_name ${dset_name} \
