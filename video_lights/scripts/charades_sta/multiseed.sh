@@ -2,7 +2,7 @@ dset_name=charadesSTA
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_types=clip
-results_root=results/charadesSTA/Final
+results_root=results/charadesSTA/multiseed_2018_42_123_3407_2025
 exp_id=exp-bicmf_2-csl-cal_0.2-nfr-edl_3-conval-hl-tcl
 
 ######## data paths
