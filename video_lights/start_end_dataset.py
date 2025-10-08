@@ -8,7 +8,7 @@ from utils.basic_utils import load_jsonl, l2_normalize_np_array
 from utils.tensor_utils import pad_sequences_1d
 from video_lights.span_utils import span_xx_to_cxw
 
-from torchtext import vocab
+# from torchtext import vocab
 import torch.nn as nn
 
 logger = logging.getLogger(__name__)
@@ -90,13 +90,13 @@ class StartEndDataset(Dataset):
         self.use_glove = False
         self.use_glove = 'vgg' in self.v_feat_dirs[0]
 
-        if self.dset_name == 'charadesSTA' and self.use_glove:
-            self.vocab = vocab.pretrained_aliases['glove.6B.300d']()
-            self.vocab.itos.extend(['<unk>'])
-            self.vocab.stoi['<unk>'] = self.vocab.vectors.shape[0]
-            self.vocab.vectors = torch.cat(
-                (self.vocab.vectors, torch.zeros(1, self.vocab.dim)), dim=0)
-            self.embedding = nn.Embedding.from_pretrained(self.vocab.vectors)
+        # if self.dset_name == 'charadesSTA' and self.use_glove:
+        #     self.vocab = vocab.pretrained_aliases['glove.6B.300d']()
+        #     self.vocab.itos.extend(['<unk>'])
+        #     self.vocab.stoi['<unk>'] = self.vocab.vectors.shape[0]
+        #     self.vocab.vectors = torch.cat(
+        #         (self.vocab.vectors, torch.zeros(1, self.vocab.dim)), dim=0)
+        #     self.embedding = nn.Embedding.from_pretrained(self.vocab.vectors)
 
     def load_data(self):
         datalist = load_jsonl(self.data_path)
