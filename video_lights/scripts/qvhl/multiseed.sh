@@ -5,7 +5,7 @@ ctx_mode=video_tef
 v_feat_types=slowfast_clip_blip
 #t_feat_types=blip
 t_feat_types=clip_blip
-results_root=results/qvhighlights/multiseed_2018_42_123_3407_2025
+results_root=results/qvhighlights/multiseed
 exp_id=exp
 
 ######## data paths
