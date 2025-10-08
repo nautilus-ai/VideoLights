@@ -395,7 +395,7 @@ def setup_model(opt):
 
     if opt.resume is not None:
         logger.info(f"Load checkpoint from {opt.resume}")
-        checkpoint = torch.load(opt.resume, map_location="cpu")
+        checkpoint = torch.load(opt.resume, map_location="cpu", weights_only=False)
         model.load_state_dict(checkpoint["model"])
         if opt.resume_all:
             optimizer.load_state_dict(checkpoint['optimizer'])

@@ -3,7 +3,7 @@ from video_lights.model import build_transformer, build_position_encoding, Video
 
 
 def build_inference_model(ckpt_path, **kwargs):
-    ckpt = torch.load(ckpt_path, map_location="cpu")
+    ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     args = ckpt["opt"]
     if len(kwargs) > 0:  # used to overwrite default args
         args.update(kwargs)
