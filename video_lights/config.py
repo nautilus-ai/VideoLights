@@ -160,10 +160,10 @@ class BaseOptions(object):
         parser.add_argument('--label_loss_coef', default=4, type=float)
         parser.add_argument('--eos_coef', default=0.1, type=float,
                             help="Relative classification weight of the no-object class")
-        parser.add_argument("--contrastive_align_loss_coef", default=0.2, type=float)
-        parser.add_argument("--hard_pos_neg_loss_coef", default=10.0, type=float)
-        parser.add_argument("--cos_sim_loss_coef", default=1.0, type=float)
-        parser.add_argument("--mr_to_hd_loss_coef", default=1.0, type=float)
+        parser.add_argument("--contrastive_align_loss_coef", default=0.0, type=float)
+        parser.add_argument("--hard_pos_neg_loss_coef", default=0.0, type=float)
+        parser.add_argument("--cos_sim_loss_coef", default=0.0, type=float)
+        parser.add_argument("--mr_to_hd_loss_coef", default=0.0, type=float)
 
         parser.add_argument("--no_sort_results", action="store_true",
                             help="do not sort results, use this for moment query visualization")
