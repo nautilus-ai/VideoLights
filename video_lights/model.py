@@ -312,7 +312,7 @@ class SetCriterion(nn.Module):
 
     def __init__(self, matcher, weight_dict, eos_coef, losses, temperature, span_loss_type, max_v_l,
                  saliency_margin=1, use_matcher=True, n_epoch=200, hard_pos_neg_loss=False,
-                 hard_pos_neg_loss_coef=10.0, clip_len=2, mr_to_hd_loss=False, mr_to_hd_loss_coef=1.0, cos_sim_loss_coef=1.0):
+                 hard_pos_neg_loss_coef=0.0, clip_len=2, mr_to_hd_loss=False, mr_to_hd_loss_coef=0.0, cos_sim_loss_coef=0.0):
         """ Create the criterion.
         Parameters:
             matcher: module able to compute a matching between targets and proposals
