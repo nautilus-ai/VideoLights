@@ -70,10 +70,10 @@ class VLTransformer(nn.Module):
                  ):
         super().__init__()
 
-        # t2v_encoder_layer = T2V_TransformerEncoderLayer(d_model, nhead, dim_feedforward,
-        #                                         dropout, activation, normalize_before)
-        t2v_encoder_layer = BiCMFLayer(d_model, nhead, dim_feedforward,
+        t2v_encoder_layer = T2V_TransformerEncoderLayer(d_model, nhead, dim_feedforward,
                                                 dropout, activation, normalize_before)
+        # t2v_encoder_layer = BiCMFLayer(d_model, nhead, dim_feedforward,
+        #                                         dropout, activation, normalize_before)
         encoder_norm = nn.LayerNorm(d_model) if normalize_before else None
         self.t2v_encoder = TransformerEncoder(t2v_encoder_layer, num_bicmf_layers, encoder_norm)
 

@@ -28,7 +28,7 @@ class VideoLight(nn.Module):
     """ QD DETR. """
 
     def __init__(self, transformer, position_embed, txt_position_embed, txt_dim, vid_dim,
-                 num_queries, input_dropout, aux_loss=False, mr_to_hd_loss=False, fra=True,
+                 num_queries, input_dropout, aux_loss=False, mr_to_hd_loss=False, fra=False,
                  contrastive_align_loss=False, contrastive_hdim=64,
                  max_v_l=75, span_loss_type="l1", use_txt_pos=False, n_input_proj=2, aud_dim=0, clip_len=2):
         """ Initializes the model.
