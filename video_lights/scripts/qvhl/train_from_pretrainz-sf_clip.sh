@@ -1,10 +1,10 @@
 dset_name=hl
 ctx_mode=video_tef
 #v_feat_types=clip
-#v_feat_types=slowfast_clip
-v_feat_types=slowfast_clip_blip
-#t_feat_types=blip
-t_feat_types=clip_blip
+v_feat_types=slowfast_clip
+#v_feat_types=slowfast_clip_blip
+t_feat_types=clip
+#t_feat_types=clip_blip
 results_root=results/qvhighlights
 exp_id=exp
 
@@ -59,11 +59,12 @@ dec_layers=3
 enc_layers=3
 bicmf_layers=1
 contrastive_align_loss_coef=0.2
-seed=2018
+pretrain_path=results/pretrain/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.2-slowfast_clip-2024_11_20_06_27_27/model_best.ckpt
 
 PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --dset_name ${dset_name} \
 --ctx_mode ${ctx_mode} \
+--resume ${pretrain_path} \
 --train_path ${train_path} \
 --eval_path ${eval_path} \
 --eval_split_name ${eval_split_name} \
@@ -80,9 +81,8 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --contrastive_align_loss \
 --contrastive_align_loss_coef ${contrastive_align_loss_coef} \
 --results_root ${results_root} \
---exp_id exp-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl-scsl-cal_${contrastive_align_loss_coef}-${v_feat_types}-seed_${seed} \
+--exp_id ft-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl-scsl-cal_${contrastive_align_loss_coef}-${v_feat_types} \
 --device 0 \
 --hidden_dim 256 \
---seed ${seed}
 ${@:1}
 

@@ -5,7 +5,7 @@ ctx_mode=video_tef
 v_feat_types=slowfast_clip_blip
 #t_feat_types=clip
 t_feat_types=clip_blip
-results_root=results/qvhighlights/Final
+results_root=results/qvhighlights
 exp_id=exp
 
 ######## data paths
@@ -59,8 +59,7 @@ dec_layers=3
 enc_layers=3
 bicmf_layers=1
 contrastive_align_loss_coef=0.2
-#pretrain_path=results/pretrain/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.2-slowfast_clip_blip-2024_11_20_06_24_46/model_best.ckpt
-pretrain_path=results/pretrain/final/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.01-slowfast_clip_blip-2024_11_28_04_58_16/model_best.ckpt
+pretrain_path=results/pretrain/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.2-slowfast_clip_blip-2024_11_20_06_24_46/model_best.ckpt
 
 PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --dset_name ${dset_name} \

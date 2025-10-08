@@ -51,7 +51,7 @@ max_v_l=75
 dec_layers=3
 enc_layers=3
 bicmf_layers=1
-contrastive_align_loss_coef=0.01
+contrastive_align_loss_coef=0.2
 
 
 PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
@@ -81,3 +81,4 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --device 0 \
 --hidden_dim 256 \
 ${@:1}
+

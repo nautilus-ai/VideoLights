@@ -1,12 +1,12 @@
 dset_name=hl
 ctx_mode=video_tef
-#v_feat_types=clip
 #v_feat_types=slowfast_clip
 v_feat_types=slowfast_clip_blip
+#v_feat_types=clip
 #t_feat_types=clip
 t_feat_types=clip_blip
-results_root=results/qvhighlights/Ablation-new/tcl
-exp_id=exp
+results_root=results/qvhighlights/ablation/bicmf_count_experiment
+exp_id=exp-bf-bicmf_count
 
 ######## data paths
 train_path=data/highlight_train_release.jsonl
@@ -57,38 +57,32 @@ echo ${t_feat_dirs[@]}
 bsz=32
 dec_layers=3
 enc_layers=3
-bicmf_layers=1
+bicmf_layers=2
 contrastive_align_loss_coef=0.2
-hard_pos_neg_loss_coef=0
-cos_sim_loss_coef=0
-mr_to_hd_loss_coef=1
-seed=2018
 
-PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
---dset_name ${dset_name} \
---ctx_mode ${ctx_mode} \
---train_path ${train_path} \
---eval_path ${eval_path} \
---eval_split_name ${eval_split_name} \
---v_feat_dirs ${v_feat_dirs[@]} \
---v_feat_dim ${v_feat_dim} \
---t_feat_dirs ${t_feat_dirs[@]} \
---t_feat_dim ${t_feat_dim} \
---bsz ${bsz} \
---n_epoch 150 \
---dec_layers ${dec_layers} \
---enc_layers ${enc_layers} \
---bicmf_layers ${bicmf_layers} \
---mr_to_hd_loss \
---mr_to_hd_loss_coef ${mr_to_hd_loss_coef} \
---hard_pos_neg_loss \
---hard_pos_neg_loss_coef ${hard_pos_neg_loss_coef} \
---contrastive_align_loss \
---contrastive_align_loss_coef ${contrastive_align_loss_coef} \
---cos_sim_loss_coef ${cos_sim_loss_coef} \
---results_root ${results_root} \
---exp_id ablation-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl_${hard_pos_neg_loss_coef}-scsl_${cos_sim_loss_coef}-cal_${contrastive_align_loss_coef}-${v_feat_types}-seed_${seed} \
---device 0 \
---hidden_dim 256 \
---seed ${seed}
-${@:1}
+for bicmf_layers in 0 1 2 3 4 5
+  PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
+  --dset_name ${dset_name} \
+  --ctx_mode ${ctx_mode} \
+  --train_path ${train_path} \
+  --eval_path ${eval_path} \
+  --eval_split_name ${eval_split_name} \
+  --v_feat_dirs ${v_feat_dirs[@]} \
+  --v_feat_dim ${v_feat_dim} \
+  --t_feat_dirs ${t_feat_dirs[@]} \
+  --t_feat_dim ${t_feat_dim} \
+  --bsz ${bsz} \
+  --dec_layers ${dec_layers} \
+  --enc_layers ${enc_layers} \
+  --bicmf_layers ${bicmf_layers} \
+  --mr_to_hd_loss \
+  --hard_pos_neg_loss \
+  --contrastive_align_loss \
+  --contrastive_align_loss_coef ${contrastive_align_loss_coef} \
+  --results_root ${results_root} \
+  --exp_id ${exp_id}_${bicmf_layers} \
+  --device 0 \
+  --n_epoch 100 \
+  --hidden_dim 256 \
+  ${@:1}
+done

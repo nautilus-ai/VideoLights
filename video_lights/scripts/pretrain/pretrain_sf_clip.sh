@@ -2,7 +2,7 @@ dset_name=hl
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_types=clip
-results_root=results/pretrain/final
+results_root=results/pretrain
 exp_id=pt_sf-clip_fuse_calign_cmf
 
 ######## data paths
@@ -51,7 +51,7 @@ max_v_l=75
 dec_layers=3
 enc_layers=3
 bicmf_layers=1
-contrastive_align_loss_coef=0.01
+contrastive_align_loss_coef=0.2
 
 
 PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \

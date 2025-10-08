@@ -2,7 +2,7 @@ dset_name=charadesSTA
 ctx_mode=video_tef
 v_feat_types=slowfast_clip_blip
 t_feat_types=clip_blip
-results_root=results/charadesSTA/Final
+results_root=results/charadesSTA
 exp_id=ft_sf-clip-blip_calign_cos_sim_bicmf-3
 
 ######## data paths
@@ -51,11 +51,10 @@ dec_layers=3
 enc_layers=3
 bicmf_layers=1
 max_v_l=75
-contrastive_align_loss_coef=0.3
+contrastive_align_loss_coef=0.2
 hard_pos_neg_loss_coef=10
 main_metric="MR-full-R1@0.3"
-#pretrain_path=results/pretrain/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.2-slowfast_clip_blip-2024_11_20_06_24_46/model_best.ckpt
-pretrain_path=results/pretrain/final/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.01-slowfast_clip_blip-2024_11_28_04_58_16/model_best.ckpt
+pretrain_path=results/pretrain/hl-video_tef-exp-bicmf_1-en_3-dec_3-tcl-hl-scsl-cal_0.2-slowfast_clip_blip-2024_11_20_06_24_46/model_best.ckpt
 
 
 PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
@@ -71,7 +70,7 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --t_feat_dim ${t_feat_dim} \
 --bsz ${bsz} \
 --results_root ${results_root} \
---exp_id ft-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl-scsl-cal_${contrastive_align_loss_coef}-${v_feat_types} \
+--exp_id exp-bicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-tcl-hl-scsl-cal_${contrastive_align_loss_coef}-${v_feat_types} \
 --max_v_l ${max_v_l} \
 --clip_length 1 \
 --lr ${lr} \

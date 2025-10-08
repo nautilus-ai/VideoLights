@@ -1,8 +1,8 @@
 dset_name=charadesSTA
 ctx_mode=video_tef
-v_feat_types=slowfast_clip
-t_feat_types=clip
-results_root=results/charadesSTA/Final
+v_feat_types=slowfast_clip_blip
+t_feat_types=clip_blip
+results_root=results/charadesSTA
 exp_id=exp-bicmf_2-csl-cal_0.2-nfr-edl_3-conval-hl-tcl
 
 ######## data paths
@@ -51,7 +51,7 @@ dec_layers=3
 enc_layers=3
 bicmf_layers=1
 max_v_l=75
-contrastive_align_loss_coef=0.3
+contrastive_align_loss_coef=0.2
 hard_pos_neg_loss_coef=10
 main_metric="MR-full-R1@0.3"
 #pretrain_path=results/hl-video_tef-pt-2024_03_24_17_02_26/model_best.ckpt

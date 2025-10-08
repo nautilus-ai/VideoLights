@@ -2,7 +2,7 @@ dset_name=hl
 ctx_mode=video_tef
 v_feat_types=slowfast_clip_blip
 t_feat_types=clip_blip
-results_root=results/pretrain/final
+results_root=results/pretrain
 exp_id=pt_new_sf-clip-blip
 
 ######## data paths

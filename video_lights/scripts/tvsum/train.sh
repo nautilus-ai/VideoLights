@@ -1,13 +1,13 @@
 dset_name=tvsum
 ctx_mode=video_tef
-v_feat_types=i3d
+#v_feat_types=i3d
 #v_feat_types=blip
 #v_feat_types=i3d_blip
 #v_feat_types=slowfast_clip
-#v_feat_types=slowfast_clip_blip
-t_feat_types=clip
+v_feat_types=slowfast_clip_blip
+#t_feat_types=clip
 #t_feat_types=blip
-#t_feat_types=clip_blip
+t_feat_types=clip_blip
 results_root=results/tvsum/v-${v_feat_types}-t-${t_feat_types}
 exp_id=exp-I3D-bicmf_2-cal_0.8-nfr-edl_3-conval-hl
 
@@ -70,10 +70,10 @@ cos_sim_loss_coef=1
 
 for hard_pos_neg_loss_coef in 1 # 1 10
 do
-  for cos_sim_loss_coef in 1 5 10
+  ######## TVSUM domain name
+  for dset_domain in  BK BT DS FM GA MS PK PR VT VU
   do
-    ######## TVSUM domain name
-    for dset_domain in  BK BT DS FM GA MS PK PR VT VU
+    for cos_sim_loss_coef in 10 # 1 5 10
     do
         PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
         --dset_name ${dset_name} \
@@ -102,7 +102,6 @@ do
         --contrastive_align_loss \
         --contrastive_align_loss_coef ${contrastive_align_loss_coef} \
         --cos_sim_loss_coef ${cos_sim_loss_coef} \
-        --mr_to_hd_loss \
         ${@:1}
     done
   done
