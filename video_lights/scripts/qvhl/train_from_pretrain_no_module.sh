@@ -81,5 +81,6 @@ PYTHONPATH=$PYTHONPATH:. python video_lights/train.py \
 --exp_id ft-unicmf_${bicmf_layers}-en_${enc_layers}-dec_${dec_layers}-no_module-${v_feat_types} \
 --device 0 \
 --hidden_dim 256 \
+--seed 2017 \
 ${@:1}
 
