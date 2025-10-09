@@ -2,7 +2,7 @@ dset_name=activitynet
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_types=clip
-results_root=results/activitynet
+results_root=results/activitynet/qd_detr
 exp_id=exp
 
 ######## data paths
@@ -42,7 +42,7 @@ fi
 #fi
 
 #### training
-bsz=24
+bsz=32
 eval_bsz=32
 lr=5e-05
 lr_drop=100
