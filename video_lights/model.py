@@ -157,8 +157,20 @@ class VideoLight(nn.Module):
 
         src_vid_ed = src_vid
 
+        similarity_before_fra = None
+        if not self.training:
+            similarity_before_fra = self._compute_token_clip_similarity(
+                src_vid_ed, src_txt, src_vid_mask, src_txt_mask
+            )
+
         if self.fra:
             src_vid = self.feature_refinement(src_vid, src_txt, src_vid_mask, src_txt_mask)
+
+        similarity_after_fra = None
+        if not self.training:
+            similarity_after_fra = self._compute_token_clip_similarity(
+                src_vid, src_txt, src_vid_mask, src_txt_mask
+            )
 
         src = torch.cat([src_vid, src_txt], dim=1)  # (bsz, L_vid+L_txt, d)
         mask = torch.cat([src_vid_mask, src_txt_mask], dim=1).bool()  # (bsz, L_vid+L_txt)
@@ -237,6 +249,8 @@ class VideoLight(nn.Module):
         out["video_mask"] = src_vid_mask
         out["src_txt"] = src_txt
         out["src_vid"] = src_vid
+        out["token_clip_similarity_before"] = similarity_before_fra
+        out["token_clip_similarity_after"] = similarity_after_fra
 
         if self.aux_loss:
             # assert proj_queries and proj_txt_mem
@@ -293,6 +307,30 @@ class VideoLight(nn.Module):
         #             torch.sum(self.saliency_proj1(memory) * self.saliency_proj2(global_features).unsqueeze(1),
         #                       dim=-1) / np.sqrt(self.hidden_dim))
         return saliency_scores
+
+    def _compute_token_clip_similarity(self, video_features, txt_features, vid_mask, txt_mask):
+        if vid_mask is None or txt_mask is None:
+            return torch.zeros_like(video_features[..., 0])
+
+        vid_mask = vid_mask.float()
+        txt_mask = txt_mask.float()
+
+        # Zero out padded positions before normalization to avoid spurious similarity scores.
+        vid_repr = F.relu(video_features.detach()) * vid_mask.unsqueeze(-1)
+        txt_repr = F.relu(txt_features.detach()) * txt_mask.unsqueeze(-1)
+
+        vid_repr = F.normalize(vid_repr, p=2, dim=-1)
+        txt_repr = F.normalize(txt_repr, p=2, dim=-1)
+        similarity = torch.bmm(vid_repr, txt_repr.transpose(1, 2))
+
+        txt_weights = txt_mask.unsqueeze(1)
+        similarity = similarity * txt_weights
+        token_counts = txt_weights.sum(dim=2).clamp(min=1e-6)
+
+        clip_scores = similarity.sum(dim=2) / token_counts
+        clip_scores = clip_scores * vid_mask
+        clip_scores = torch.nan_to_num(clip_scores, nan=0.0, posinf=0.0, neginf=0.0)
+        return clip_scores
 
     # @torch.jit.unused
     # def _set_aux_loss(self, outputs_class, outputs_coord):

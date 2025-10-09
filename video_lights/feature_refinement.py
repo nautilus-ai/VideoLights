@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-from video_lights.components import Conv1D, WeightedPool
+from video_lights.components import Conv1D, WeightedPool, mask_logits
 
 
 class FeatureRefinement(nn.Module):
@@ -33,11 +33,19 @@ class FeatureRefinement(nn.Module):
         bs, vl, dim = video_features.shape
         _, ql, _ = query_features.shape
 
+        video_mask = video_mask.float() if video_mask is not None else None
+        query_mask = query_mask.float() if query_mask is not None else None
+
         query_expanded = query_features.unsqueeze(2)  # [bs, num_words, 1, hidden_size]
         video_expanded = video_features.unsqueeze(1)  # [bs, 1, num_clips, hidden_size]
 
-        correlation = (query_expanded * video_expanded) # [bs, num_words, num_clips, hidden_size]
-        correlation_scores = nn.Softmax(dim=1)(correlation.sum(dim=-1))  # [bs, num_words, num_clips]
+        correlation = (query_expanded * video_expanded)  # [bs, num_words, num_clips, hidden_size]
+        correlation_logits = correlation.sum(dim=-1)  # [bs, num_words, num_clips]
+        if query_mask is not None:
+            correlation_logits = mask_logits(correlation_logits, mask=query_mask.unsqueeze(2))
+        correlation_scores = F.softmax(correlation_logits, dim=1)  # [bs, num_words, num_clips]
+        if video_mask is not None:
+            correlation_scores = correlation_scores * video_mask.unsqueeze(1)
 
         cor_v_w = self.cor_v_w.repeat(bs, 1, 1)
         cor_q_w = self.cor_q_w.repeat(bs, ql, 1)
@@ -45,23 +53,38 @@ class FeatureRefinement(nn.Module):
         cor_w = cor_v_w * cor_q_w
 
         corr_matrix = self.dropout(torch.matmul(correlation_scores.transpose(1,2), cor_w))
+        if video_mask is not None:
+            corr_matrix = corr_matrix * video_mask.unsqueeze(-1)
 
         # word-level -> sentence-level
         sentence_feature = self.word_to_sentence_pool(query_features, query_mask).unsqueeze(1)
-        sim = F.cosine_similarity(video_features, sentence_feature, dim=-1) + (video_mask + 1e-45).log()
+        sim = F.cosine_similarity(video_features, sentence_feature, dim=-1)
+        if video_mask is not None:
+            sim = sim + (video_mask + 1e-45).log()
 
         sim_features = self.dropout(torch.matmul(self.sim_w.transpose(1, 0).expand(bs, 1, dim)
                                                  .transpose(1, 2), sim.unsqueeze(1))).transpose(1, 2)
+        if video_mask is not None:
+            sim_features = sim_features * video_mask.unsqueeze(-1)
 
         # pooled_query = self.weighted_pool(query_features, query_mask)
         pooled_query = self.dropout(sentence_feature.repeat(1, vl, 1))
+        if video_mask is not None:
+            pooled_query = pooled_query * video_mask.unsqueeze(-1)
 
-        features = torch.cat([self.dropout(video_features), sim_features, pooled_query, corr_matrix], dim=2)
+        base_video = self.dropout(video_features)
+        if video_mask is not None:
+            base_video = base_video * video_mask.unsqueeze(-1)
+
+        features = torch.cat([base_video, sim_features, pooled_query, corr_matrix], dim=2)
         # features = torch.cat([self.dropout(video_features), sim_features, pooled_query], dim=2)
 
         # output = self.conv1d(output)
         out_features = self.mixer(features)
-        return self.dropout(F.relu(out_features))
+        out_features = self.dropout(F.relu(out_features))
+        if video_mask is not None:
+            out_features = out_features * video_mask.unsqueeze(-1)
+        return out_features
 
     def _reset_parameters(self):
         for p in self.parameters():

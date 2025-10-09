@@ -2,6 +2,7 @@ import pprint
 from tqdm import tqdm, trange
 import numpy as np
 import os
+import math
 from collections import OrderedDict, defaultdict
 from utils.basic_utils import AverageMeter
 
@@ -225,6 +226,77 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
     write_tb = tb_writer is not None and epoch_i is not None
 
     mr_res = []
+    all_sim_before = []
+    all_sim_after = []
+    all_gt_saliency = []
+
+    def _cosine_sim(vec_a, vec_b):
+        if vec_a.numel() < 1:
+            return None
+        vec_a = vec_a.float()
+        vec_b = vec_b.float()
+        denom = torch.norm(vec_a) * torch.norm(vec_b)
+        if denom < 1e-6:
+            return None
+        return torch.dot(vec_a, vec_b) / denom
+
+    def _pearson_corr(vec_a, vec_b):
+        if vec_a.numel() < 2:
+            return None
+        vec_a = vec_a.float()
+        vec_b = vec_b.float()
+        centered_a = vec_a - vec_a.mean()
+        centered_b = vec_b - vec_b.mean()
+        denom = torch.sqrt(centered_a.pow(2).mean() * centered_b.pow(2).mean())
+        if denom < 1e-6:
+            return None
+        return (centered_a * centered_b).mean() / denom
+
+    # def _kendall_tau(vec_a, vec_b):
+    #     n = vec_a.numel()
+    #     if n < 2:
+    #         return None
+    #     vec_a = vec_a.float()
+    #     vec_b = vec_b.float()
+    #     concordant = discordant = ties_a = ties_b = 0
+    #     for i in range(n - 1):
+    #         for j in range(i + 1, n):
+    #             diff_a = vec_a[i] - vec_a[j]
+    #             diff_b = vec_b[i] - vec_b[j]
+    #             if diff_a == 0 and diff_b == 0:
+    #                 continue
+    #             if diff_a == 0:
+    #                 ties_a += 1
+    #                 continue
+    #             if diff_b == 0:
+    #                 ties_b += 1
+    #                 continue
+    #             prod = diff_a * diff_b
+    #             if prod > 0:
+    #                 concordant += 1
+    #             elif prod < 0:
+    #                 discordant += 1
+    #     denom = math.sqrt((concordant + discordant + ties_a) * (concordant + discordant + ties_b))
+    #     if denom < 1e-6:
+    #         return None
+    #     return (concordant - discordant) / denom
+
+    # def _kl_divergence(vec_a, vec_b):
+    #     vec_a = vec_a.float()
+    #     vec_b = vec_b.float()
+    #     vec_a = vec_a - vec_a.min()
+    #     vec_b = vec_b - vec_b.min()
+    #     vec_a = vec_a + 1e-6
+    #     vec_b = vec_b + 1e-6
+    #     sum_a = vec_a.sum()
+    #     sum_b = vec_b.sum()
+    #     if sum_a < 1e-6 or sum_b < 1e-6:
+    #         return None
+    #     prob_a = vec_a / sum_a
+    #     prob_b = vec_b / sum_b
+    #     kl = prob_a * (torch.log(prob_a) - torch.log(prob_b.clamp(min=1e-6)))
+    #     return kl.sum()
+
     for batch in tqdm(eval_loader, desc="compute st ed scores"):
         query_meta = batch[0]
         # if opt.a_feat_dir is None:
@@ -276,6 +348,59 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
             for k, v in loss_dict.items():
                 loss_meters[k].update(float(v) * weight_dict[k] if k in weight_dict else float(v))
 
+        similarity_before = outputs.get("token_clip_similarity_before") if isinstance(outputs, dict) else None
+        similarity_after = outputs.get("token_clip_similarity_after") if isinstance(outputs, dict) else None
+        if (
+            similarity_before is not None and similarity_after is not None and targets is not None
+            and "saliency_all_labels" in targets
+        ):
+            gt_saliency = targets["saliency_all_labels"].detach()
+            vid_mask = model_inputs["src_vid_mask"].detach()
+
+            for sample_idx in range(similarity_before.size(0)):
+                valid_len = int(vid_mask[sample_idx].sum().item())
+                if valid_len < 2:
+                    continue
+                gt_vec = gt_saliency[sample_idx, :valid_len].detach()
+                sim_before_vec = similarity_before[sample_idx, :valid_len].detach()
+                sim_after_vec = similarity_after[sample_idx, :valid_len].detach()
+
+                cos_before = _cosine_sim(sim_before_vec.cpu(), gt_vec.cpu())
+                cos_after = _cosine_sim(sim_after_vec.cpu(), gt_vec.cpu())
+
+                corr_before = _pearson_corr(sim_before_vec.cpu(), gt_vec.cpu())
+                corr_after = _pearson_corr(sim_after_vec.cpu(), gt_vec.cpu())
+
+                # tau_before = _kendall_tau(sim_before_vec.cpu(), gt_vec.cpu())
+                # tau_after = _kendall_tau(sim_after_vec.cpu(), gt_vec.cpu())
+
+                # kl_before = _kl_divergence(sim_before_vec.cpu(), gt_vec.cpu())
+                # kl_after = _kl_divergence(sim_after_vec.cpu(), gt_vec.cpu())
+
+                if cos_before is not None:
+                    loss_meters["token_clip_cos_before"].update(float(cos_before))
+                if cos_after is not None:
+                    loss_meters["token_clip_cos_after"].update(float(cos_after))
+
+                if corr_before is not None:
+                    loss_meters["token_clip_corr_before"].update(float(corr_before))
+                if corr_after is not None:
+                    loss_meters["token_clip_corr_after"].update(float(corr_after))
+
+                # if tau_before is not None:
+                #     loss_meters["token_clip_tau_before"].update(float(tau_before))
+                # if tau_after is not None:
+                #     loss_meters["token_clip_tau_after"].update(float(tau_after))
+
+                # if kl_before is not None:
+                #     loss_meters["token_clip_kl_before"].update(float(kl_before))
+                # if kl_after is not None:
+                #     loss_meters["token_clip_kl_after"].update(float(kl_after))
+
+                all_sim_before.extend(sim_before_vec.cpu().tolist())
+                all_sim_after.extend(sim_after_vec.cpu().tolist())
+                all_gt_saliency.extend(gt_vec.cpu().tolist())
+
         if opt.debug:
             break
 
@@ -309,6 +434,81 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
             process_func_names=(["round_multiple"])
         )
     mr_res = post_processor(mr_res)
+
+    if all_gt_saliency:
+        sim_before_tensor = torch.tensor(all_sim_before, dtype=torch.float32)
+        sim_after_tensor = torch.tensor(all_sim_after, dtype=torch.float32)
+        gt_tensor = torch.tensor(all_gt_saliency, dtype=torch.float32)
+
+        global_cos_before = _cosine_sim(sim_before_tensor, gt_tensor)
+        global_cos_after = _cosine_sim(sim_after_tensor, gt_tensor)
+
+        global_corr_before = _pearson_corr(sim_before_tensor, gt_tensor)
+        global_corr_after = _pearson_corr(sim_after_tensor, gt_tensor)
+
+        # global_tau_before = _kendall_tau(sim_before_tensor, gt_tensor)
+        # global_tau_after = _kendall_tau(sim_after_tensor, gt_tensor)
+
+        # global_kl_before = _kl_divergence(sim_before_tensor, gt_tensor)
+        # global_kl_after = _kl_divergence(sim_after_tensor, gt_tensor)
+
+        cos_before_val = float(global_cos_before) if global_cos_before is not None else None
+        cos_after_val = float(global_cos_after) if global_cos_after is not None else None
+
+        corr_before_val = float(global_corr_before) if global_corr_before is not None else None
+        corr_after_val = float(global_corr_after) if global_corr_after is not None else None
+
+        # tau_before_val = float(global_tau_before) if global_tau_before is not None else None
+        # tau_after_val = float(global_tau_after) if global_tau_after is not None else None
+
+        # kl_before_val = float(global_kl_before) if global_kl_before is not None else None
+        # kl_after_val = float(global_kl_after) if global_kl_after is not None else None
+
+        if cos_before_val is not None:
+            loss_meters["token_clip_cos_before_global"].update(cos_before_val)
+        if cos_after_val is not None:
+            loss_meters["token_clip_cos_after_global"].update(cos_after_val)
+
+        if corr_before_val is not None:
+            loss_meters["token_clip_corr_before_global"].update(corr_before_val)
+        if corr_after_val is not None:
+            loss_meters["token_clip_corr_after_global"].update(corr_after_val)
+
+        # if tau_before_val is not None:
+        #     loss_meters["token_clip_tau_before_global"].update(tau_before_val)
+        # if tau_after_val is not None:
+        #     loss_meters["token_clip_tau_after_global"].update(tau_after_val)
+
+        # if kl_before_val is not None:
+        #     loss_meters["token_clip_kl_before_global"].update(kl_before_val)
+        # if kl_after_val is not None:
+        #     loss_meters["token_clip_kl_after_global"].update(kl_after_val)
+
+        if corr_before_val is not None and corr_after_val is not None:
+            def _fmt(val):
+                return f"{val:.4f}" if val is not None else "   N/A"
+
+            def _delta(val_before, val_after):
+                if val_before is None or val_after is None:
+                    return "   N/A"
+                return f"{(val_after - val_before):+.4f}"
+
+            rows = [
+                ("Pearson", corr_before_val, corr_after_val),
+                ("Cosine", cos_before_val, cos_after_val),
+                # ("KendallTau", tau_before_val, tau_after_val),
+                # ("KLDiv", kl_before_val, kl_after_val),
+            ]
+            header = "{:<12} {:>12} {:>12} {:>12}".format("Metric", "Before", "After", "Delta")
+            table_rows = [header]
+            for name, before, after in rows:
+                table_rows.append("{:<12} {:>12} {:>12} {:>12}".format(
+                    name,
+                    _fmt(before),
+                    _fmt(after),
+                    _delta(before, after)
+                ))
+            logger.info("Token-clip similarity ↔ saliency alignment metrics:\n%s", "\n".join(table_rows))
     return mr_res, loss_meters
 
 
