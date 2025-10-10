@@ -67,7 +67,7 @@ echo ${t_feat_dirs[@]}
 bsz=64
 dec_layers=3
 enc_layers=3
-bicmf_layers=3
+bicmf_layers=1
 contrastive_align_loss_coef=0.2
 seed=2018
 

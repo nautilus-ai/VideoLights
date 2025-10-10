@@ -363,15 +363,18 @@ class StartEndDataset(Dataset):
         q_feat_list = []
         q_feat_type = self.q_feat_type
         for _feat_dir in self.q_feat_dirs:
-            if self.dset_name == "tvsum":
-                q_feat_path = join(_feat_dir, f"{qid}{aug}.npz")
-                q_feat_type = 'token'
-            elif self.dset_name in ['youtube_uni', 'nlq', 'tacos', 'activitynet']:
-                q_feat_path = join(_feat_dir, f"{qid}{aug}.npz")
+            if "llama" in _feat_dir:
+                q_feat_path = join(_feat_dir, f"qid{qid}{aug}.pt")
+                q_feat = torch.load(q_feat_path, weights_only=True).float().numpy()
             else:
-                q_feat_path = join(_feat_dir, f"qid{qid}{aug}.npz")
-
-            q_feat = np.load(q_feat_path)[q_feat_type].astype(np.float32)
+                if self.dset_name == "tvsum":
+                    q_feat_path = join(_feat_dir, f"{qid}{aug}.npz")
+                    q_feat_type = 'token'
+                elif self.dset_name in ['youtube_uni', 'nlq', 'tacos', 'activitynet']:
+                    q_feat_path = join(_feat_dir, f"{qid}{aug}.npz")
+                else:
+                    q_feat_path = join(_feat_dir, f"qid{qid}{aug}.npz")
+                q_feat = np.load(q_feat_path)[q_feat_type].astype(np.float32)
 
             if self.q_feat_type == "last_hidden_state":
                 q_feat = q_feat[:self.max_q_l]
@@ -432,8 +435,14 @@ class StartEndDataset(Dataset):
                     _feat_path = join(_feat_dir, f"{vid}.npz")
                     _feat = np.load(_feat_path)["features"][:self.max_v_l].astype(np.float32)
                 except:
-                    _feat_path = join(_feat_dir, f"{vid}.npy")
-                    _feat = np.load(_feat_path)[:self.max_v_l].astype(np.float32)
+                    # _feat_path = join(_feat_dir, f"{vid}.npy")
+                    # _feat = np.load(_feat_path)[:self.max_v_l].astype(np.float32)
+                    try:
+                        _feat_path = join(_feat_dir, f"{vid}.pt")
+                        _feat = torch.load(_feat_path, weights_only=True)[:self.max_v_l].float().numpy()
+                    except:
+                        _feat_path = join(_feat_dir, f"{vid}.npy")
+                        _feat = np.load(_feat_path)[:self.max_v_l].astype(np.float32)
                 if self.normalize_v:
                     _feat = l2_normalize_np_array(_feat)
                 v_feat_list.append(_feat)
